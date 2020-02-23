@@ -12,4 +12,10 @@ export class HeaderComponent implements OnInit {
   ngOnInit() {
   }
 
+  // opens given link in new tab
+  open(link: string) {
+    if (link) {
+      window.open(link, '_blank');
+    }
+  }
 }
