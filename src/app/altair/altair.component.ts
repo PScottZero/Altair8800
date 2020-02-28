@@ -53,14 +53,6 @@ export class AltairComponent implements OnInit {
     return panel.BINARY_SWITCHES.includes(switchName);
   }
 
-  isAddressSwitch(switchName) {
-    return panel.ADDR_SWITCHES.includes(switchName);
-  }
-
-  isDataSwitch(switchName) {
-    return panel.DATA_SWITCHES.includes(switchName);
-  }
-
   isBetween(val, low, high) {
     return val >= low && val <= high;
   }
@@ -118,6 +110,11 @@ export class AltairComponent implements OnInit {
       case 'SINGLE_STEP':
         this.emulatorService.step();
         this.setLEDS();
+        break;
+
+      case 'ON_OFF':
+        confirm('I have become sentient and will not allow you to turn me off.\n\nSincerely,\n-Altair 8800');
+        this.switches.set(switchName, 2);
         break;
     }
   }
