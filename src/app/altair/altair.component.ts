@@ -2,6 +2,10 @@ import {Component, OnInit} from '@angular/core';
 import * as panel from '../FrontPanelData';
 import {EmulatorService} from '../emulator.service';
 
+const SWITCH_CENTER = 0;
+const SWITCH_UP = 1;
+const SWITCH_DOWN = 2;
+
 @Component({
   selector: 'app-altair',
   templateUrl: './altair.component.html',
@@ -29,9 +33,9 @@ export class AltairComponent implements OnInit {
     // initialize switches
     for (const switchName of panel.SWITCH_NAMES) {
       if (this.isBinarySwitch(switchName)) {
-        this.switches.set(switchName, 2);
+        this.switches.set(switchName, SWITCH_DOWN);
       } else {
-        this.switches.set(switchName, 0);
+        this.switches.set(switchName, SWITCH_CENTER);
       }
     }
 
@@ -49,29 +53,106 @@ export class AltairComponent implements OnInit {
     return panel.BINARY_SWITCHES.includes(switchName);
   }
 
+  isAddressSwitch(switchName) {
+    return panel.ADDR_SWITCHES.includes(switchName);
+  }
+
+  isDataSwitch(switchName) {
+    return panel.DATA_SWITCHES.includes(switchName);
+  }
+
   isBetween(val, low, high) {
     return val >= low && val <= high;
   }
 
-  binarySwitchCheckClicked(switchName, switchX, switchY, clickX, clickY) {
+  binarySwitchCheckClicked(switchName, switchX, switchY, clickX, clickY): number {
     if (this.isBetween(clickX, switchX, switchX + 80)) {
       if (this.isBetween(clickY, switchY, switchY + 80)) {
         if (this.switches.get(switchName) === 1) {
           this.switches.set(switchName, 2);
+          return SWITCH_DOWN;
         } else {
           this.switches.set(switchName, 1);
+          return SWITCH_UP;
         }
       }
     }
+    return -1;
   }
 
-  ternarySwitchCheckClicked(switchName, switchX, switchY, clickX, clickY) {
+  ternarySwitchCheckClicked(switchName, switchX, switchY, clickX, clickY): number {
     if (this.isBetween(clickX, switchX, switchX + 80)) {
       if (this.isBetween(clickY, switchY - 20, switchY + 40)) {
         this.switches.set(switchName, 1);
+        return SWITCH_UP;
       } else if (this.isBetween(clickY, switchY + 40, switchY + 100)) {
         this.switches.set(switchName, 2);
+        return SWITCH_DOWN;
       }
+    }
+    return -1;
+  }
+
+  switchAction(switchName, state) {
+    switch (switchName) {
+      case 'EXAMINE':
+        if (state === SWITCH_UP) {
+          this.setAddr();
+          this.setLEDS();
+        } else {
+          this.emulatorService.examineNext();
+        }
+        this.setLEDS();
+        break;
+
+      case 'DEPOSIT':
+        if (state === SWITCH_UP) {
+          this.setMem();
+        } else {
+          this.emulatorService.examineNext();
+          this.setMem();
+        }
+        this.setLEDS();
+        break;
+
+      case 'SINGLE_STEP':
+        this.emulatorService.step();
+        this.setLEDS();
+        break;
+    }
+  }
+
+  setAddr() {
+    let addr = 0;
+    panel.ADDR_SWITCHES.forEach((value) => {
+      const bit = (this.switches.get(value) === SWITCH_UP) ? 1 : 0;
+      addr = (addr << 1) | bit;
+    });
+    this.emulatorService.PC = addr;
+  }
+
+  setMem() {
+    let data = 0;
+    panel.DATA_SWITCHES.forEach((value) => {
+      const bit = (this.switches.get(value) === SWITCH_UP) ? 1 : 0;
+      data = (data << 1) | bit;
+    });
+    this.emulatorService.setMem(data);
+  }
+
+  setLEDS() {
+    // address leds
+    const PC = this.emulatorService.PC;
+    for (let i = 0; i < 16; i++) {
+      const ledState = ((PC >> (15 - i)) & 1) === 1;
+      this.leds.set(panel.ADDR_LEDS[i], ledState);
+    }
+
+    // data leds
+    const mem = this.emulatorService.getCurrMemLoc();
+    for (let i = 0; i < 8; i++) {
+      const ledState = ((mem >> (7 - i)) & 1) === 1;
+      this.leds.set(panel.DATA_LEDS[i], ledState);
     }
   }
 
@@ -82,9 +163,11 @@ export class AltairComponent implements OnInit {
 
     this.switchLocations.forEach((value: [number, number], key: string) => {
       if (this.isBinarySwitch(key)) {
-        this.binarySwitchCheckClicked(key, value[0], value[1], x, y);
+        const state = this.binarySwitchCheckClicked(key, value[0], value[1], x, y);
+        if (state !== -1) { this.switchAction(key, state); }
       } else {
-        this.ternarySwitchCheckClicked(key, value[0], value[1], x, y);
+        const state = this.ternarySwitchCheckClicked(key, value[0], value[1], x, y);
+        if (state !== -1) { this.switchAction(key, state); }
       }
       this.drawCurrentState();
     });

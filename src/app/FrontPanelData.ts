@@ -23,3 +23,7 @@ export const SWITCH_NAMES = [
 ];
 
 export const BINARY_SWITCHES = SWITCH_NAMES.slice(0, 17);
+export const DATA_LEDS = LED_NAMES.slice(10, 18);
+export const ADDR_LEDS = LED_NAMES.slice(20, 36);
+export const ADDR_SWITCHES = SWITCH_NAMES.slice(0, 16);
+export const DATA_SWITCHES = SWITCH_NAMES.slice(8, 16);
