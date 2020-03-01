@@ -1,0 +1,26 @@
+<div id="sys-info">
+  <h1>ALTAIR 8800 EMULATOR</h1>
+
+  <!-- memory map -->
+  <div id="mem-map">
+    <p *ngFor="let memLine of getMemoryMap()">
+      {{memLine}}
+    </p>
+  </div>
+
+  <!-- registers -->
+  <div id="registers">
+    <p *ngFor="let regLine of getRegs()">
+      {{regLine}}
+    </p>
+  </div>
+
+  <!-- flags -->
+  <div id="flags">
+    <p>{{getFlags()}}</p>
+  </div>
+
+  <footer>
+    <img id="github" src="../../assets/images/GitHub-Mark-Light-120px-plus.png" alt="GitHub" (click)="open('https://github.com/PScottZero/Altair8800')">
+  </footer>
+</div>

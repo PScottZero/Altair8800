@@ -1,0 +1,61 @@
+#sys-info {
+  width: 20em;
+  height: 100vh;
+  float: left;
+  background: #00000055;
+  backdrop-filter: blur(20px);
+  font-family: '256 Bytes', sans-serif;
+  text-align: center;
+  color: white;
+
+  h1 {
+    margin: 1em 0;
+  }
+}
+
+footer {
+  width: 100%;
+  text-align: center;
+  position: fixed;
+  bottom: 0;
+  margin: 1em 0;
+  height: 3em;
+
+  img {
+    height: 100%;
+  }
+}
+
+#mem-map {
+  width: 80%;
+  margin: auto;
+  height: 20em;
+  overflow-y: scroll;
+  font-family: monospace;
+  font-size: 14px;
+  border: 2px solid white;
+  padding: 0.5em;
+  line-height: 1.5;
+}
+
+#registers {
+  width: 80%;
+  margin: 1em auto;
+  height: auto;
+  font-family: monospace;
+  font-size: 14px;
+  border: 2px solid white;
+  padding: 0.5em;
+  line-height: 1.5;
+}
+
+#flags {
+  width: 80%;
+  margin: 1em auto;
+  height: auto;
+  font-family: monospace;
+  font-size: 14px;
+  border: 2px solid white;
+  padding: 0.5em;
+  line-height: 1.5;
+}

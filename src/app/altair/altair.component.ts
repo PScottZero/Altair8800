@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import * as panel from '../FrontPanelData';
-import {EmulatorService} from '../emulator.service';
+import {Intel8080Service} from '../intel8080.service';
 
 const SWITCH_CENTER = 0;
 const SWITCH_UP = 1;
@@ -20,7 +20,7 @@ export class AltairComponent implements OnInit {
   // html elements
   canvas: HTMLCanvasElement;
 
-  constructor(private emulatorService: EmulatorService) { }
+  constructor(private intel8080Service: Intel8080Service) { }
 
   ngOnInit() {
 
@@ -92,7 +92,7 @@ export class AltairComponent implements OnInit {
           this.setAddr();
           this.setLEDS();
         } else {
-          this.emulatorService.examineNext();
+          this.intel8080Service.examineNext();
         }
         this.setLEDS();
         break;
@@ -101,14 +101,14 @@ export class AltairComponent implements OnInit {
         if (state === SWITCH_UP) {
           this.setMem();
         } else {
-          this.emulatorService.examineNext();
+          this.intel8080Service.examineNext();
           this.setMem();
         }
         this.setLEDS();
         break;
 
       case 'SINGLE_STEP':
-        this.emulatorService.step();
+        this.intel8080Service.step();
         this.setLEDS();
         break;
 
@@ -125,7 +125,7 @@ export class AltairComponent implements OnInit {
       const bit = (this.switches.get(value) === SWITCH_UP) ? 1 : 0;
       addr = (addr << 1) | bit;
     });
-    this.emulatorService.PC = addr;
+    this.intel8080Service.PC = addr;
   }
 
   setMem() {
@@ -134,19 +134,19 @@ export class AltairComponent implements OnInit {
       const bit = (this.switches.get(value) === SWITCH_UP) ? 1 : 0;
       data = (data << 1) | bit;
     });
-    this.emulatorService.setMem(data);
+    this.intel8080Service.setMem(data);
   }
 
   setLEDS() {
     // address leds
-    const PC = this.emulatorService.PC;
+    const PC = this.intel8080Service.PC;
     for (let i = 0; i < 16; i++) {
       const ledState = ((PC >> (15 - i)) & 1) === 1;
       this.leds.set(panel.ADDR_LEDS[i], ledState);
     }
 
     // data leds
-    const mem = this.emulatorService.getCurrMemLoc();
+    const mem = this.intel8080Service.getCurrMemLoc();
     for (let i = 0; i < 8; i++) {
       const ledState = ((mem >> (7 - i)) & 1) === 1;
       this.leds.set(panel.DATA_LEDS[i], ledState);

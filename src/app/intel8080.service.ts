@@ -16,7 +16,7 @@ const SP = 3;
 @Injectable({
   providedIn: 'root'
 })
-export class EmulatorService {
+export class Intel8080Service {
   PC: number;
   SP: number;
   regs: Uint8Array;
@@ -26,12 +26,14 @@ export class EmulatorService {
   parity: boolean;
   carry: boolean;
   auxCarry: boolean;
+  intEnable: boolean;
 
   constructor() {
     this.PC = 0;
     this.SP = 0xFFFE;
     this.regs = new Uint8Array(8);
     this.mem = new Uint8Array(0x10000);
+    this.intEnable = true;
   }
 
   step() {
@@ -57,38 +59,37 @@ export class EmulatorService {
     const regSrc = opcode & 0x7;
     const upperBits = (opcode & 0xC0) >> 6;
 
-    // non-general form opcodes
+    // non-general opcodes
     let foundOpcode = true;
     switch (opcode) {
 
       // ========================================
-      // LDA addr
-      // Load memory at addr into register A
+      // LDA a
+      // Load memory at a into register A
       // ========================================
       case 0x3A:
         this.regs[A] = this.mem[this.getImm16()];
         break;
 
       // ========================================
-      // STA addr
-      // Store register A at memory location addr
+      // STA a
+      // Store register A at memory location a
       // ========================================
       case 0x32:
         this.mem[this.getImm16()] = this.regs[A];
         break;
 
       // ========================================
-      // LHLD addr
-      // Load memory at addr into register HL
+      // LHLD a
+      // Load memory at a into register HL
       // ========================================
       case 0x2A:
         this.setRegPair(HL, this.getImm16());
         break;
 
       // ========================================
-      // SHLD addr
-      // Store register HL at memory
-      // location addr
+      // SHLD a
+      // Store register HL at memory location a
       // ========================================
       case 0x22:
         const im16 = this.getImm16();
@@ -250,7 +251,92 @@ export class EmulatorService {
       // Call subroutine at address a
       // ========================================
       case 0xCD:
+        this.push(this.PC);
         this.PC = this.getImm16() - 1;
+        break;
+
+      // ========================================
+      // RET
+      // Return from subroutine
+      // ========================================
+      case 0xC9:
+        this.PC = this.pop();
+        break;
+
+      // ========================================
+      // PCHL
+      // Jump to address in register pair HL
+      // ========================================
+      case 0xE9:
+        this.PC = this.getRegPair(HL) - 1;
+        break;
+
+      // ========================================
+      // XTHL
+      // Swap register pair HL with
+      // top word of stack
+      // ========================================
+      case 0xE3:
+        const hlVal = this.getRegPair(HL);
+        this.setRegPair(HL, this.pop());
+        this.push(hlVal);
+        break;
+
+      // ========================================
+      // SPHL
+      // Set SP to register pair HL
+      // ========================================
+      case 0xF9:
+        this.setRegPair(SP, HL);
+        break;
+
+      // ========================================
+      // IN pa
+      // Read input port pa into register A
+      // NOT IMPLEMENTED
+      // ========================================
+      case 0xDB:
+        this.PC += 2;
+        break;
+
+      // ========================================
+      // OUT pa
+      // Write register A to output port pa
+      // NOT IMPLEMENTED
+      // ========================================
+      case 0xD3:
+        this.PC += 2;
+        break;
+
+      // ========================================
+      // EI
+      // Enable interrupts
+      // ========================================
+      case 0xFB:
+        this.intEnable = true;
+        break;
+
+      // ========================================
+      // DI
+      // Disable interrupts
+      // ========================================
+      case 0xF3:
+        this.intEnable = false;
+        break;
+
+      // ========================================
+      // HLT
+      // Halt processor
+      // ========================================
+      case 0x76:
+        // TODO: implement halt
+        break;
+
+      // ========================================
+      // NOP
+      // No operation
+      // ========================================
+      case 0x00:
         break;
 
       default:
@@ -318,6 +404,28 @@ export class EmulatorService {
 
   boolToNum(b: boolean): number {
     return (b) ? 1 : 0;
+  }
+
+  push(n16: number) {
+    this.mem[this.SP--] = n16 & 0xFF;
+    this.mem[this.SP--] = (n16 >> 8) & 0xFF;
+  }
+
+  pushRegPair(a: number, b: number) {
+    this.mem[this.SP--] = b;
+    this.mem[this.SP--] = a;
+  }
+
+  pop(): number {
+    const msb = this.mem[++this.SP];
+    const lsb = this.mem[++this.SP];
+    return (msb << 8) | lsb;
+  }
+
+  popRegPair(): number[] {
+    const regHi = this.mem[++this.SP];
+    const regLo = this.mem[++this.SP];
+    return [regHi, regLo];
   }
 
   setFlags(val: number) {

@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 
-import { EmulatorService } from './emulator.service';
+import { Intel8080Service } from './intel8080.service';
 
 describe('EmulatorService', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
 
   it('should be created', () => {
-    const service: EmulatorService = TestBed.get(EmulatorService);
+    const service: Intel8080Service = TestBed.get(Intel8080Service);
     expect(service).toBeTruthy();
   });
 });
