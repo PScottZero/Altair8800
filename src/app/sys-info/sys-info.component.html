@@ -1,26 +1,31 @@
 <div id="sys-info">
   <h1>ALTAIR 8800 EMULATOR</h1>
 
-  <!-- memory map -->
-  <div id="mem-map">
-    <p *ngFor="let memLine of getMemoryMap()">
-      {{memLine}}
-    </p>
-  </div>
+  <div id="sys-info-container">
+    <!-- memory map -->
+    <div id="mem-map">
+      <p *ngFor="let memLine of getMemoryMap()">
+        {{memLine}}
+      </p>
+    </div>
 
-  <!-- registers -->
-  <div id="registers">
-    <p *ngFor="let regLine of getRegs()">
-      {{regLine}}
-    </p>
-  </div>
+    <!-- registers -->
+    <div id="registers">
+      <p *ngFor="let regLine of getRegs()">
+        {{regLine}}
+      </p>
+    </div>
 
-  <!-- flags -->
-  <div id="flags">
-    <p>{{getFlags()}}</p>
+    <!-- flags -->
+    <div id="flags">
+      <p>{{getFlags()}}</p>
+    </div>
   </div>
 
   <footer>
-    <img id="github" src="../../assets/images/GitHub-Mark-Light-120px-plus.png" alt="GitHub" (click)="open('https://github.com/PScottZero/Altair8800')">
+    <img src="../../assets/icons/open.svg" alt="Open" (click)="fileChooser.click()">
+    <input id="load-program" type="file" style="display: none;" (change)="loadProgram($event)">
+    <img src="../../assets/icons/save.svg" alt="Save">
+    <img src="../../assets/icons/GitHub-Mark-Light-120px-plus.png" alt="GitHub" (click)="open('https://github.com/PScottZero/Altair8800')">
   </footer>
 </div>

@@ -10,9 +10,13 @@ const REG_LIST = ['B', 'C', 'D', 'E', 'H', 'L', null, 'A'];
 })
 export class SysInfoComponent implements OnInit {
 
+  fileChooser: HTMLElement;
+
   constructor(private intel8080Service: Intel8080Service) { }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.fileChooser = document.getElementById('load-program');
+  }
 
   getMemoryMap(): string[] {
     const memMap = [];
@@ -56,6 +60,10 @@ export class SysInfoComponent implements OnInit {
     flags += 'C:' + this.boolToNum(this.intel8080Service.carry) + ' ';
     flags += 'AC:' + this.boolToNum(this.intel8080Service.auxCarry);
     return flags;
+  }
+
+  loadProgram(event) {
+    console.log(event);
   }
 
   boolToNum(b: boolean): number {
