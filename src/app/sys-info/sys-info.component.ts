@@ -10,12 +10,14 @@ const REG_LIST = ['B', 'C', 'D', 'E', 'H', 'L', null, 'A'];
 })
 export class SysInfoComponent implements OnInit {
 
-  fileChooser: HTMLElement;
+  saveFile: HTMLElement;
+  openFile: HTMLElement;
 
   constructor(private intel8080Service: Intel8080Service) { }
 
   ngOnInit() {
-    this.fileChooser = document.getElementById('load-program');
+    this.saveFile = document.getElementById('save-program');
+    this.openFile = document.getElementById('load-program');
   }
 
   getMemoryMap(): string[] {
@@ -28,7 +30,7 @@ export class SysInfoComponent implements OnInit {
       memMap.push(memLine);
     }
     return memMap;
-  }
+}
 
   getRegs() {
     const regLines = [];
@@ -63,7 +65,43 @@ export class SysInfoComponent implements OnInit {
   }
 
   loadProgram(event) {
-    console.log(event);
+    const file = event.target.files[0];
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      const result = fileReader.result as ArrayBuffer;
+      const bytes = new Uint8Array(result);
+      for (let i = 0; i < bytes.length; i++) {
+        this.intel8080Service.mem[i] = bytes[i];
+      }
+      this.intel8080Service.drawFunction();
+    };
+    fileReader.readAsArrayBuffer(file);
+  }
+
+  saveProgram() {
+    let binFile: Uint8Array;
+    for (let i = this.intel8080Service.mem.length - 1; i >= 0; i--) {
+      if (this.intel8080Service.mem[i] !== 0) {
+        binFile = this.intel8080Service.mem.slice(0, i + 1);
+        break;
+      }
+    }
+
+    if (binFile) {
+      const file = document.createElement('a');
+      document.body.appendChild(file);
+      file.setAttribute('style', 'display: none;');
+
+      const fileName = prompt('Save As', 'Enter File Name Here');
+      if (fileName) {
+        const data = new Blob([binFile], {type: 'octet/stream'});
+        const url = window.URL.createObjectURL(data);
+        file.setAttribute('href', url);
+        file.setAttribute('download', fileName + '.i80');
+        file.click();
+        window.URL.revokeObjectURL(url);
+      }
+    }
   }
 
   boolToNum(b: boolean): number {

@@ -23,9 +23,9 @@
   </div>
 
   <footer>
-    <img src="../../assets/icons/open.svg" alt="Open" (click)="fileChooser.click()">
-    <input id="load-program" type="file" style="display: none;" (change)="loadProgram($event)">
-    <img src="../../assets/icons/save.svg" alt="Save">
+    <img src="../../assets/icons/open.svg" alt="Open" (click)="openFile.click()">
+    <input id="load-program" type="file" style="display: none;" (change)="loadProgram($event)" accept=".i80">
+    <img src="../../assets/icons/save.svg" alt="Save" (click)="saveProgram()">
     <img src="../../assets/icons/GitHub-Mark-Light-120px-plus.png" alt="GitHub" (click)="open('https://github.com/PScottZero/Altair8800')">
   </footer>
 </div>

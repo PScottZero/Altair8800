@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import {Observable} from 'rxjs';
 
 // 8-bit register
 const A = 0b111;
@@ -43,7 +42,7 @@ export class Intel8080Service {
   auxCarry: boolean;
   intEnable: boolean;
 
-  runInterval: number;
+  runInterval;
 
   drawFunction: () => void;
 
@@ -52,7 +51,7 @@ export class Intel8080Service {
     this.SP = 0xFFFF;
     this.regs = new Uint8Array(8);
     this.mem = new Uint8Array(0x10000);
-    this.runInterval = -1;
+    this.runInterval = undefined;
     this.intEnable = true;
   }
 
@@ -68,16 +67,16 @@ export class Intel8080Service {
     this.runInterval = setInterval(() => {
       this.step();
       this.drawFunction();
-    }, 10);
+    }, 1);
   }
 
   isRunning(): boolean {
-    return this.runInterval >= 0;
+    return this.runInterval !== undefined;
   }
 
   stop() {
     clearInterval(this.runInterval);
-    this.runInterval = -1;
+    this.runInterval = undefined;
     this.drawFunction();
   }
 
@@ -298,7 +297,7 @@ export class Intel8080Service {
       // Unconditional jump to address a
       // ========================================
       case 0xC3:
-        this.jump();
+        this.jump(this);
         break;
 
       // ========================================
@@ -306,7 +305,7 @@ export class Intel8080Service {
       // Call subroutine at address a
       // ========================================
       case 0xCD:
-        this.call();
+        this.call(this);
         break;
 
       // ========================================
@@ -693,7 +692,7 @@ export class Intel8080Service {
   // ========================================
   increment(reg: number) {
     const tempCarry = this.carry;
-    this.add(this.regs[reg], 1);
+    this.regs[reg] = this.add(this.regs[reg], 1);
     this.carry = tempCarry;
   }
 
@@ -702,7 +701,7 @@ export class Intel8080Service {
   // ========================================
   decrement(reg: number) {
     const tempCarry = this.carry;
-    this.subtract(this.regs[reg], 1);
+    this.regs[reg] = this.subtract(this.regs[reg], 1);
     this.carry = tempCarry;
   }
 
@@ -781,33 +780,32 @@ export class Intel8080Service {
   // Jumps to address specified by
   // 16-bit immediate
   // ========================================
-  jump() {
-    this.PC = this.getImm16() - 1;
+  jump(self) {
+    self.PC = self.getImm16() - 1;
   }
 
   // ========================================
   // Calls subroutine at address specified by
   // 16-bit immediate
   // ========================================
-  call() {
-    this.push(this.PC);
-    this.PC = this.getImm16() - 1;
+  call(self) {
+    self.push(self.PC);
+    self.PC = self.getImm16() - 1;
   }
 
   // ========================================
   // Returns from a subroutine
   // ========================================
-  return() {
-    this.PC = this.pop();
+  return(self) {
+    self.PC = self.pop();
   }
 
   // ========================================
   // Runs a given function if condition
   // specified is met
   // ========================================
-  condition(condType: number, condFunc: () => void) {
+  condition(condType: number, condFunc: (thisParameter) => void) {
     let cond: boolean;
-    console.log(condType);
     switch (condType) {
       case NOT_ZERO:
         cond = !this.zero;
@@ -815,7 +813,6 @@ export class Intel8080Service {
 
       case ZERO:
         cond = this.zero;
-        console.log(cond);
         break;
 
       case NOT_CARRY:
@@ -844,7 +841,7 @@ export class Intel8080Service {
     }
 
     if (cond) {
-      condFunc();
+      condFunc(this);
     } else {
       this.PC += 2;
     }
